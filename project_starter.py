@@ -591,7 +591,7 @@ def search_quote_history(search_terms: List[str], limit: int = 5) -> List[Dict]:
 # Beaver's Choice Paper Company - multi-agent quoting, inventory and sales system
 # Framework: smolagents (ToolCallingAgent with managed agents)
 #
-# Agents (5 in total, see the workflow diagram and design_notes.txt):
+# Agents (5 in total, see agent_workflow_diagram.png and reflection_report.md):
 #   1. Orchestrator agent     - customer-facing; delegates to the workers and writes the reply
 #   2. Inventory agent        - catalog matching, stock checks, supplier lead times, restocking
 #   3. Quoting agent          - quote history research and bulk-discount pricing

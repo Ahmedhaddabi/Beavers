@@ -1,0 +1,72 @@
+digraph G {
+  graph [rankdir=TB, fontname="Helvetica", fontsize=11, nodesep=0.35, ranksep=0.55, labelloc=t,
+         label=<<B>Beaver's Choice Paper Company - Multi-Agent Workflow (smolagents, 5 agents)</B><BR/><FONT POINT-SIZE="10">Solid arrows = control flow between agents (labelled with the data passed). Dashed arrows = tool calls. Grey = starter helper functions used by each tool.</FONT>>];
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+
+  customer [shape=box, style="rounded,filled", fillcolor="#eeeeee", label=<<B>Customer request</B><BR/>text + request date + context<BR/>(from quote_requests_sample.csv)>];
+  reply    [shape=box, style="rounded,filled", fillcolor="#eeeeee", label=<<B>Customer reply</B><BR/>outcome, itemised prices, discounts + reasons,<BR/>total, delivery date, reasons for unfilled items>];
+
+  orch [shape=box, style="rounded,filled", fillcolor="#e8d5f5", penwidth=2, label=<<B>1. Orchestrator Agent</B> (ToolCallingAgent, manager)<BR/>Customer-facing. Decides the order of delegation;<BR/>never checks stock or sets prices itself.<BR/><I>Decision: assess -&gt; quote (if anything can be supplied) -&gt;<BR/>restock (if needed) -&gt; finalize -&gt; reply</I><BR/>Final-answer checks: customer_reply_is_safe,<BR/>workflow_is_complete>];
+
+  inv [shape=box, style="rounded,filled", fillcolor="#d6e6fb", label=<<B>2. Inventory Agent</B><BR/>Matches items to catalog, checks stock,<BR/>plans and places supplier restocks.<BR/><I>Decision: ship from stock / restock in time /<BR/>unavailable (not carried or misses deadline)</I>>];
+  quo [shape=box, style="rounded,filled", fillcolor="#fbf0c8", label=<<B>3. Quoting Agent</B><BR/>Prices the supplyable items using<BR/>quote history and bulk-discount tiers.<BR/><I>Decision: optional 0-3% promotional discount<BR/>with a stated business reason</I>>];
+  sal [shape=box, style="rounded,filled", fillcolor="#d5f0d8", label=<<B>4. Sales Agent</B><BR/>Finalizes the quote and records the sale.<BR/><I>Decision: run a financial health check<BR/>for orders over $1,000, then finalize</I>>];
+  adv [shape=box, style="rounded,filled", fillcolor="#d3f1f3", label=<<B>5. Business Advisor Agent</B><BR/>Runs once after the batch; reviews all<BR/>transactions and writes recommendations<BR/>to business_advisor_report.txt>];
+
+  node [shape=note, style=filled, fillcolor="#ffffff", fontsize=9];
+  t_assess [label=<<B>assess_order_availability</B><BR/>purpose: per-line availability, delivery date,<BR/>restock plan -&gt; assessment ID>];
+  t_place  [label=<<B>place_supplier_orders</B><BR/>purpose: record restock purchases<BR/>planned in an assessment>];
+  t_stock  [label=<<B>check_stock_level</B><BR/>purpose: units on hand for one item>];
+  t_snap   [label=<<B>get_inventory_snapshot</B><BR/>purpose: all stock + items below reorder point>];
+  t_cat    [label=<<B>lookup_catalog_item</B><BR/>purpose: customer wording -&gt; catalog item + price>];
+  t_eta    [label=<<B>get_supplier_delivery_estimate</B><BR/>purpose: supplier lead time for a quantity>];
+  t_hist   [label=<<B>search_past_quotes</B><BR/>purpose: similar historical quotes<BR/>to calibrate pricing>];
+  t_quote  [label=<<B>generate_quote</B><BR/>purpose: itemised quote with bulk +<BR/>promotional discount -&gt; quote ID>];
+  t_health [label=<<B>check_financial_health</B><BR/>purpose: internal cash/inventory check<BR/>before large orders>];
+  t_final  [label=<<B>finalize_order</B><BR/>purpose: verify stock and record<BR/>sales transactions>];
+  t_frep   [label=<<B>get_financial_report</B><BR/>purpose: cash, inventory, low stock,<BR/>top sellers>];
+  t_sum    [label=<<B>get_sales_activity_summary</B><BR/>purpose: outcomes, revenue, items<BR/>requested but not supplied>];
+
+  node [shape=box, style="rounded,filled", fillcolor="#f2f2f2", color="#999999", fontcolor="#444444", fontsize=8];
+  h_stock [label="get_stock_level"];
+  h_all   [label="get_all_inventory"];
+  h_date  [label="get_supplier_delivery_date"];
+  h_cash  [label="get_cash_balance"];
+  h_tx    [label="create_transaction"];
+  h_hist  [label="search_quote_history"];
+  h_rep   [label="generate_financial_report"];
+  db [shape=cylinder, style=filled, fillcolor="#fff5e0", color="#aa8844", fontcolor="#000000", fontsize=9, label="munder_difflin.db\n(SQLite: inventory,\ntransactions, quotes)"];
+
+  customer -> orch [label=" request + date ", penwidth=1.5];
+  orch -> inv [label=" 1. assess request\n (items, request date, deadline) ", penwidth=1.5];
+  inv -> orch [label=" assessment ID +\n availability summary ", style=solid, color="#3366aa"];
+  orch -> quo [label=" 2. quote request\n (assessment ID + context) ", penwidth=1.5];
+  quo -> orch [label=" quote ID + itemised quote ", color="#aa8800"];
+  orch -> inv [label=" 3. place supplier orders\n (assessment ID, only if needed) ", style=bold, color="#3366aa"];
+  orch -> sal [label=" 4. finalize\n (quote ID, date, total) ", penwidth=1.5];
+  sal -> orch [label=" order confirmation\n (ORDER CONFIRMED / NOT FINALIZED) ", color="#338844"];
+  orch -> reply [label=" 5. customer reply ", penwidth=1.5];
+  orch -> adv [label=" after all requests:\n business review ", style=dotted];
+
+  edge [style=dashed, arrowsize=0.6, color="#555555"];
+  inv -> {t_assess t_place t_stock t_snap t_cat t_eta};
+  quo -> {t_hist t_quote};
+  sal -> {t_health t_final};
+  adv -> {t_frep t_sum};
+
+  edge [style=dotted, color="#999999", arrowsize=0.5];
+  t_assess -> {h_stock h_date h_cash};
+  t_place -> {h_tx h_date h_cash};
+  t_stock -> h_stock; t_snap -> h_all; t_eta -> h_date;
+  t_hist -> h_hist;
+  t_health -> {h_rep h_cash};
+  t_final -> {h_tx h_stock};
+  t_frep -> h_rep;
+  {h_stock h_all h_date h_cash h_tx h_hist h_rep} -> db [color="#ccaa66"];
+
+  {rank=same; inv quo sal adv}
+  edge [style=invis];
+  t_assess -> t_place -> t_stock; t_snap -> t_cat -> t_eta;
+  t_hist -> t_quote; t_health -> t_final; t_frep -> t_sum;
+}
