@@ -1,0 +1,9 @@
+1. **Increase Stock of High-Demand Items**: Given that A4 paper and colored paper are frequently requested but often out of stock, consider increasing the stock levels of these items to meet customer demand and avoid lost sales. Specifically, A4 paper should be prioritized as it has multiple requests exceeding current stock levels.
+
+2. **Stock Items Not Currently Carried**: There are several items that customers requested which are not currently stocked, such as balloons and cardboard for signage. Evaluate the feasibility of adding these items to the inventory to capture additional sales opportunities.
+
+3. **Improve Reorder Points**: The current reorder point for colored paper is too low, leading to stockouts. Adjust the reorder points based on sales velocity and lead times to ensure that popular items are always available.
+
+4. **Enhance Supplier Relationships**: The supplier spend is significant, and there are delays in restocking critical items. Strengthening relationships with suppliers could lead to better terms, faster restocking, and potentially lower costs.
+
+5. **Diversify Product Offerings**: Since there are several items sourced on demand, consider evaluating which of these could be added to the regular inventory. This could streamline operations and improve customer satisfaction by reducing wait times for popular items.
